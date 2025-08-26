@@ -8,7 +8,7 @@ FROM ${BASE_IMAGE} AS base
 ARG COMFYUI_VERSION=latest
 ARG CUDA_VERSION_FOR_COMFY=12.8
 ARG ENABLE_PYTORCH_UPGRADE=false
-ARG PYTORCH_INDEX_URL
+ARG PYTORCH_INDEX_URL=https://download.pytorch.org/whl/cu128
 
 # Prevents prompts from packages asking for user input during installation
 ENV DEBIAN_FRONTEND=noninteractive
