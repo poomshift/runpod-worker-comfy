@@ -1,12 +1,12 @@
 # Build argument for base image selection
-ARG BASE_IMAGE=nvidia/cuda:12.6.3-cudnn-runtime-ubuntu24.04
+ARG BASE_IMAGE=nvidia/cuda:12.8.0-cudnn-runtime-ubuntu24.04
 
 # Stage 1: Base image with common dependencies
 FROM ${BASE_IMAGE} AS base
 
 # Build arguments for this stage with sensible defaults for standalone builds
 ARG COMFYUI_VERSION=latest
-ARG CUDA_VERSION_FOR_COMFY
+ARG CUDA_VERSION_FOR_COMFY=12.8
 ARG ENABLE_PYTORCH_UPGRADE=false
 ARG PYTORCH_INDEX_URL
 
@@ -25,6 +25,7 @@ RUN apt-get update && apt-get install -y \
     python3.12-venv \
     git \
     wget \
+    aria2 \
     libgl1 \
     libglib2.0-0 \
     libsm6 \
@@ -96,7 +97,7 @@ FROM base AS downloader
 
 ARG HUGGINGFACE_ACCESS_TOKEN
 # Set default model type if none is provided
-ARG MODEL_TYPE=flux1-dev-fp8
+ARG MODEL_TYPE=wan
 
 # Change working directory to ComfyUI
 WORKDIR /comfyui
@@ -131,6 +132,15 @@ RUN if [ "$MODEL_TYPE" = "flux1-dev" ]; then \
 
 RUN if [ "$MODEL_TYPE" = "flux1-dev-fp8" ]; then \
       wget -q -O models/checkpoints/flux1-dev-fp8.safetensors https://huggingface.co/Comfy-Org/flux1-dev/resolve/main/flux1-dev-fp8.safetensors; \
+    fi
+
+RUN if [ "$MODEL_TYPE" = "wan" ]; then \
+      aria2c --console-log-level=error -c -x 8 -s 8 -k 1M https://huggingface.co/Comfy-Org/Wan_2.1_ComfyUI_repackaged/resolve/main/split_files/vae/wan_2.1_vae.safetensors -d models/vae/ -o wan_2.1_vae.safetensors && \
+      aria2c --console-log-level=error -c -x 8 -s 8 -k 1M https://huggingface.co/Comfy-Org/Wan_2.2_ComfyUI_Repackaged/resolve/main/split_files/diffusion_models/wan2.2_i2v_high_noise_14B_fp8_scaled.safetensors -d models/diffusion_models/ -o wan2.2_i2v_high_noise_14B_fp8_scaled.safetensors && \
+      aria2c --console-log-level=error -c -x 8 -s 8 -k 1M https://huggingface.co/Comfy-Org/Wan_2.2_ComfyUI_Repackaged/resolve/main/split_files/diffusion_models/wan2.2_i2v_low_noise_14B_fp8_scaled.safetensors -d models/diffusion_models/ -o wan2.2_i2v_low_noise_14B_fp8_scaled.safetensors && \
+      aria2c --console-log-level=error -c -x 8 -s 8 -k 1M https://huggingface.co/Comfy-Org/Wan_2.1_ComfyUI_repackaged/resolve/main/split_files/text_encoders/umt5_xxl_fp8_e4m3fn_scaled.safetensors -d models/text_encoders/ -o umt5_xxl_fp8_e4m3fn_scaled.safetensors && \ 
+      aria2c --console-log-level=error -c -x 8 -s 8 -k 1M https://huggingface.co/Comfy-Org/Wan_2.2_ComfyUI_Repackaged/resolve/main/split_files/loras/wan2.2_i2v_lightx2v_4steps_lora_v1_high_noise.safetensors -d models/loras/ -o wan2.2_i2v_lightx2v_4steps_lora_v1_high_noise.safetensors && \
+      aria2c --console-log-level=error -c -x 8 -s 8 -k 1M https://huggingface.co/Comfy-Org/Wan_2.2_ComfyUI_Repackaged/resolve/main/split_files/loras/wan2.2_i2v_lightx2v_4steps_lora_v1_low_noise.safetensors -d models/loras/ -o wan2.2_i2v_lightx2v_4steps_lora_v1_low_noise.safetensors; \
     fi
 
 # Stage 3: Final image
