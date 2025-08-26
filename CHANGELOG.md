@@ -1,3 +1,98 @@
+# [5.3.0](https://github.com/runpod-workers/worker-comfyui/compare/5.2.0...5.3.0) (2025-07-22)
+
+
+### Features
+
+* add support for 5090/B200 ([#150](https://github.com/runpod-workers/worker-comfyui/issues/150)) ([7492513](https://github.com/runpod-workers/worker-comfyui/commit/7492513490bc1723503dded682ee2c313a1c8ea6))
+
+# [5.2.0](https://github.com/runpod-workers/worker-comfyui/compare/5.1.1...5.2.0) (2025-07-02)
+
+
+### Features
+
+* update comfyui to 0.3.43 ([#145](https://github.com/runpod-workers/worker-comfyui/issues/145)) ([32c2395](https://github.com/runpod-workers/worker-comfyui/commit/32c23956a44dae4cd3800d6de9491539065a200a))
+
+## [5.1.1](https://github.com/runpod-workers/worker-comfyui/compare/5.1.0...5.1.1) (2025-07-01)
+
+
+### Bug Fixes
+
+* update runpod to 1.7.12 ([#144](https://github.com/runpod-workers/worker-comfyui/issues/144)) ([c689eda](https://github.com/runpod-workers/worker-comfyui/commit/c689eda26b8d9505a0a63d6d4af6f8cab997e24f))
+
+# [5.1.0](https://github.com/runpod-workers/worker-comfyui/compare/5.0.4...5.1.0) (2025-05-28)
+
+
+### Bug Fixes
+
+* add missing libs needed for "opencv" to work ([33cd5d3](https://github.com/runpod-workers/worker-comfyui/commit/33cd5d349f76e4a393a3a4f3e99f954989b2c683))
+* use proper example that actually can be copied & pasted ([506fac1](https://github.com/runpod-workers/worker-comfyui/commit/506fac10480ec238110ae0dcb59b0b6865879471))
+
+
+### Features
+
+* added COMFY_LOG_LEVEL to control the logs from ComfyUI ([183de1c](https://github.com/runpod-workers/worker-comfyui/commit/183de1cdececa217abcbec30545e24c5820eba97))
+* added script "comfy-manager-set-mode" to set the "network mode" ([4d5425f](https://github.com/runpod-workers/worker-comfyui/commit/4d5425f211b85b95e4953f6c0ddf27ed92e3cfa1))
+* added script "comfy-node-install" as a wrapper to "comfy-cli" to proivde a proper exit code when something is not corret ([6605506](https://github.com/runpod-workers/worker-comfyui/commit/660550637bceb72052ef7c1dec9d6f36035a2fd2))
+* improved logging & provide actual reason why the workflow validation might fail ([7582999](https://github.com/runpod-workers/worker-comfyui/commit/7582999209d9683c198aa1c6d3793a16fe059416))
+* updated to ubuntu 24.04 & python 3.12 to support ffmpeg 6 ([eb8dd26](https://github.com/runpod-workers/worker-comfyui/commit/eb8dd265e0823b39974dc91bbb489b54ac92c8d3))
+
+# [5.0.0](https://github.com/runpod-workers/worker-comfyui/compare/4.0.1...5.0.0) (2025-05-02)
+
+
+### Features
+
+* multiple output images; replace http polling with websocket to check when a workflow is done ([#118](https://github.com/runpod-workers/worker-comfyui/issues/118)) ([b14068f](https://github.com/runpod-workers/worker-comfyui/commit/b14068f8e7da4790d2de5d4b710a08d26d0c131f))
+
+
+### BREAKING CHANGES
+
+* api output is not compatible anymore
+
+* docs: added all possible comfyui folders; simplified guide of method 1
+
+* fix(model): flux.1-schnell is gated
+
+* feat: update to 0.3.30
+
+* test: don't run "snapshot_restoration" tests
+
+* chore: force local images
+
+* docs: lowercase for code comments
+
+* ci: run release for changes in "main"
+
+* fix: workflow trigger
+
+* ci: build only base for now
+
+# [4.1.0](https://github.com/runpod-workers/worker-comfyui/compare/4.0.1...4.1.0) (2025-05-02)
+
+
+### Bug Fixes
+
+* moved code back into stage 1 ([d9ed145](https://github.com/runpod-workers/worker-comfyui/commit/d9ed14571308ad27481ae2dda4762d32b73b5d20))
+
+
+### Features
+
+* move stuff around ([2b2bc12](https://github.com/runpod-workers/worker-comfyui/commit/2b2bc1238dec5715092fa4b3e1418b8a443a409b))
+* removed polling; added websocket; allow multiple output images; ([79a560f](https://github.com/runpod-workers/worker-comfyui/commit/79a560f46fbd303828175d138098faebd4baa97e))
+
+# [3.6.0](https://github.com/blib-la/runpod-worker-comfy/compare/3.5.0...3.6.0) (2025-03-12)
+
+
+### Features
+
+* update comfyui to 0.3.26 ([ac0269e](https://github.com/blib-la/runpod-worker-comfy/commit/ac0269e683a0bcba43fafad40d4b56f51cad2588))
+
+# [3.5.0](https://github.com/blib-la/runpod-worker-comfy/compare/3.4.0...3.5.0) (2025-03-12)
+
+
+### Features
+
+* added support for hub ([c8dd49c](https://github.com/blib-la/runpod-worker-comfy/commit/c8dd49cc2d8c23d58b48b1823bdecc3267f9accd))
+
 # [3.4.0](https://github.com/blib-la/runpod-worker-comfy/compare/3.3.0...3.4.0) (2024-11-19)
 
 

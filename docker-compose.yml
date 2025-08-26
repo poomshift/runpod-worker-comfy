@@ -1,6 +1,7 @@
 services:
   comfyui-worker:
-    image: timpietruskyblibla/runpod-worker-comfy:3.4.0-sdxl
+    image: runpod/worker-comfyui:dev
+    pull_policy: never
     deploy:
       resources:
         reservations:
