@@ -82,6 +82,9 @@ RUN chmod +x /start.sh
 COPY scripts/comfy-node-install.sh /usr/local/bin/comfy-node-install
 RUN chmod +x /usr/local/bin/comfy-node-install
 
+# install custom nodes using comfy-cli
+RUN comfy-node-install comfyui-kjnodes ComfyUI-VideoHelperSuite ComfyUI-WanVideoWrapper
+
 # Prevent pip from asking for confirmation during uninstall steps in custom nodes
 ENV PIP_NO_INPUT=1
 
