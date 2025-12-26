@@ -7,7 +7,7 @@ FROM ${BASE_IMAGE} AS base
 # Build arguments for this stage with sensible defaults for standalone builds
 ARG COMFYUI_VERSION=latest
 ARG CUDA_VERSION_FOR_COMFY
-ARG ENABLE_PYTORCH_UPGRADE=false
+ARG ENABLE_PYTORCH_UPGRADE=true
 ARG PYTORCH_INDEX_URL=https://download.pytorch.org/whl/cu128
 
 # Prevents prompts from packages asking for user input during installation
@@ -23,6 +23,7 @@ ENV CMAKE_BUILD_PARALLEL_LEVEL=8
 RUN apt-get update && apt-get install -y \
     python3.12 \
     python3.12-venv \
+    python3.12-dev \
     git \
     wget \
     aria2 \
@@ -32,6 +33,17 @@ RUN apt-get update && apt-get install -y \
     libxext6 \
     libxrender1 \
     ffmpeg \
+    libavcodec-dev \
+    libavformat-dev \
+    libavutil-dev \
+    libswscale-dev \
+    libswresample-dev \
+    libavfilter-dev \
+    libavdevice-dev \
+    pkg-config \
+    build-essential \
+    cmake \
+    ninja-build \
     && ln -sf /usr/bin/python3.12 /usr/bin/python \
     && ln -sf /usr/bin/pip3 /usr/bin/pip
 
@@ -62,6 +74,40 @@ RUN if [ "$ENABLE_PYTORCH_UPGRADE" = "true" ]; then \
       uv pip install --force-reinstall torch torchvision torchaudio --index-url ${PYTORCH_INDEX_URL}; \
     fi
 
+# Verify FFmpeg installation and libraries
+RUN ffmpeg -version && ldconfig
+
+# Ensure FFmpeg libraries are in the library cache
+RUN echo "/usr/lib/x86_64-linux-gnu" > /etc/ld.so.conf.d/ffmpeg.conf && ldconfig
+
+# Set library path for runtime to ensure FFmpeg libraries are found
+ENV LD_LIBRARY_PATH=/usr/lib/x86_64-linux-gnu:${LD_LIBRARY_PATH}
+
+# Install torchcodec - use pre-built wheel first
+RUN uv pip uninstall torchcodec || true && \
+    uv pip install --no-cache-dir torchcodec
+
+# Debug: Check what's installed and what libraries are available
+RUN echo "=== Checking FFmpeg version ===" && ffmpeg -version | head -5 && \
+    echo "=== FFmpeg libraries available ===" && ldconfig -p | grep libav | head -20 && \
+    echo "=== Torchcodec .so files ===" && ls -la /opt/venv/lib/python3.12/site-packages/torchcodec/*.so 2>/dev/null || echo "No .so files found" && \
+    echo "=== Checking first .so dependencies ===" && \
+    for so_file in /opt/venv/lib/python3.12/site-packages/torchcodec/libtorchcodec_core*.so; do \
+        if [ -f "$so_file" ]; then \
+            echo "Checking $so_file:"; \
+            ldd "$so_file" 2>&1 | grep -E "(not found|libav)" || echo "No missing libav libraries"; \
+            break; \
+        fi; \
+    done
+
+# Verify torchcodec installation
+RUN python -c "import torchcodec; print('torchcodec version:', torchcodec.__version__); print('torchcodec imported successfully')" || \
+    echo "WARNING: torchcodec import failed - will rely on alternative audio loading methods"
+
+# Install sageattention
+RUN uv pip install https://huggingface.co/Kijai/PrecompiledWheels/resolve/main/sageattention-2.2.0-cp312-cp312-linux_x86_64.whl
+RUN uv pip install https://huggingface.co/vjump21848/sageattention-pre-compiled-wheel/resolve/main/sageattn3-1.0.0%2Bcu128-cp312-cp312-linux_x86_64.whl?download=true
+
 # Change working directory to ComfyUI
 WORKDIR /comfyui
 
@@ -83,7 +129,7 @@ COPY scripts/comfy-node-install.sh /usr/local/bin/comfy-node-install
 RUN chmod +x /usr/local/bin/comfy-node-install
 
 # install custom nodes using comfy-cli
-RUN comfy-node-install comfyui-kjnodes comfyui-videohelpersuite ComfyUI-WanVideoWrapper media-url-loader
+RUN comfy-node-install comfyui-kjnodes comfyui-videohelpersuite ComfyUI-WanVideoWrapper media-url-loader ComfyUI-MelBandRoFormer
 
 # Prevent pip from asking for confirmation during uninstall steps in custom nodes
 ENV PIP_NO_INPUT=1
