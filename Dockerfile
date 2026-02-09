@@ -71,7 +71,7 @@ RUN if [ -n "${CUDA_VERSION_FOR_COMFY}" ]; then \
 
 # Upgrade PyTorch if needed (for newer CUDA versions)
 RUN if [ "$ENABLE_PYTORCH_UPGRADE" = "true" ]; then \
-      uv pip install --force-reinstall torch==2.9.1 torchvision==0.22.1 torchaudio==2.6.1 --index-url ${PYTORCH_INDEX_URL}; \
+      uv pip install --force-reinstall torch==2.9.1 torchvision==0.24.1 torchaudio==2.9.1 --index-url ${PYTORCH_INDEX_URL}; \
     fi
 
 # Verify FFmpeg installation and libraries
