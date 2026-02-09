@@ -71,7 +71,7 @@ RUN if [ -n "${CUDA_VERSION_FOR_COMFY}" ]; then \
 
 # Upgrade PyTorch if needed (for newer CUDA versions)
 RUN if [ "$ENABLE_PYTORCH_UPGRADE" = "true" ]; then \
-      uv pip install --force-reinstall torch torchvision torchaudio --index-url ${PYTORCH_INDEX_URL}; \
+      uv pip install --force-reinstall torch==2.9.1 torchvision==0.22.1 torchaudio==2.6.1 --index-url ${PYTORCH_INDEX_URL}; \
     fi
 
 # Verify FFmpeg installation and libraries
@@ -129,7 +129,7 @@ COPY scripts/comfy-node-install.sh /usr/local/bin/comfy-node-install
 RUN chmod +x /usr/local/bin/comfy-node-install
 
 # install custom nodes using comfy-cli
-RUN comfy-node-install comfyui-kjnodes comfyui-videohelpersuite ComfyUI-WanVideoWrapper media-url-loader ComfyUI-MelBandRoFormer
+RUN comfy-node-install comfyui-kjnodes comfyui-videohelpersuite ComfyUI-WanVideoWrapper media-url-loader ComfyUI-MelBandRoFormer RES4LYF ComfyUI-SCAIL-Pose
 
 # Prevent pip from asking for confirmation during uninstall steps in custom nodes
 ENV PIP_NO_INPUT=1

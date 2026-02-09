@@ -43,6 +43,89 @@ REFRESH_WORKER = os.environ.get("REFRESH_WORKER", "false").lower() == "true"
 # Helper: quick reachability probe of ComfyUI HTTP endpoint (port 8188)
 # ---------------------------------------------------------------------------
 
+# ======================== PATCH UPLOAD GCS ==================================
+
+GCS_BUCKET_NAME: str | None = (
+    os.getenv("BUCKET_NAME")
+    if os.environ.get("BUCKET_ENDPOINT_URL", "").find("storage.googleapis.com") != -1
+    else None
+)
+
+# Patch rp_upload for Google Cloud Storage compatibility
+if os.environ.get("BUCKET_ENDPOINT_URL", "").find("storage.googleapis.com") != -1:
+    from botocore.config import Config
+    from boto3 import session as boto_session
+    from boto3.s3.transfer import TransferConfig
+    import multiprocessing
+
+    # S3 configuration settings
+    addr_style = os.getenv("S3_ADDRESSING_STYLE", "virtual")
+    unsigned_env = os.getenv("S3_UNSIGNED_PAYLOAD", "true").lower()
+    unsigned_payload = unsigned_env in ("1", "true", "yes", "y")
+    region_override = os.getenv("BUCKET_REGION") or os.getenv("AWS_DEFAULT_REGION")
+
+    def _patched_get_boto_client(bucket_creds=None):
+        """
+        Patch boto3 client for GCS compatibility and checksum validation fix
+        """
+        bucket_sess = boto_session.Session()
+
+        # S3 config
+        s3_cfg = {"addressing_style": addr_style}
+        s3_cfg["payload_signing"] = not unsigned_payload and None or False
+
+        # Fix checksum validation for GCS (2025)
+        boto_cfg = Config(
+            signature_version="s3v4",
+            s3=s3_cfg,
+            request_checksum_calculation="when_required",
+            response_checksum_validation="when_required",
+        )
+
+        # Transfer config
+        xfer_cfg = TransferConfig(
+            multipart_threshold=1024 * 25,
+            max_concurrency=multiprocessing.cpu_count(),
+            multipart_chunksize=1024 * 25,
+            use_threads=True,
+        )
+
+        # Get credentials
+        if bucket_creds:
+            endpoint_url = bucket_creds["endpointUrl"]
+            access_key_id = bucket_creds["accessId"]
+            secret_access_key = bucket_creds["accessSecret"]
+        else:
+            endpoint_url = os.environ.get("BUCKET_ENDPOINT_URL")
+            access_key_id = os.environ.get("BUCKET_ACCESS_KEY_ID")
+            secret_access_key = os.environ.get("BUCKET_SECRET_ACCESS_KEY")
+
+        region = region_override or rp_upload.extract_region_from_url(endpoint_url)
+
+        # Create S3 client
+        s3 = bucket_sess.client(
+            "s3",
+            endpoint_url=endpoint_url,
+            aws_access_key_id=access_key_id,
+            aws_secret_access_key=secret_access_key,
+            config=boto_cfg,
+            region_name=region,
+        )
+
+        return s3, xfer_cfg
+
+    # Apply patch
+    rp_upload.get_boto_client = _patched_get_boto_client
+
+    print("✓ Patched rp_upload.get_boto_client for GCS compatibility")
+    print(f"  - Addressing style: {addr_style}")
+    print(f"  - Unsigned payload: {unsigned_payload}")
+    print(f"  - Region override: {region_override}")
+    print("✓ Added boto3 checksum compatibility fix for GCS")
+
+
+# ========================================================================================
+
 
 def _comfy_server_status():
     """Return a dictionary with basic reachability info for the ComfyUI HTTP server."""
@@ -721,7 +804,11 @@ def handler(job):
                                 )
 
                                 print(f"worker-comfyui - Uploading {filename} to S3...")
-                                s3_url = rp_upload.upload_image(job_id, temp_file_path)
+                                s3_url = rp_upload.upload_image(
+                                    job_id=job_id,
+                                    image_location=temp_file_path,
+                                    bucket_name=GCS_BUCKET_NAME,
+                                )
                                 os.remove(temp_file_path)  # Clean up temp file
                                 print(
                                     f"worker-comfyui - Uploaded {filename} to S3: {s3_url}"
@@ -810,7 +897,11 @@ def handler(job):
                                 )
 
                                 print(f"worker-comfyui - Uploading {filename} to S3...")
-                                s3_url = rp_upload.upload_image(job_id, temp_file_path)  # Using upload_image for videos too
+                                s3_url = rp_upload.upload_image(
+                                    job_id=job_id,
+                                    image_location=temp_file_path,
+                                    bucket_name=GCS_BUCKET_NAME,
+                                )  # Using upload_image for videos too
                                 os.remove(temp_file_path)  # Clean up temp file
                                 print(
                                     f"worker-comfyui - Uploaded {filename} to S3: {s3_url}"
