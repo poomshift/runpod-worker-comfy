@@ -129,7 +129,10 @@ COPY scripts/comfy-node-install.sh /usr/local/bin/comfy-node-install
 RUN chmod +x /usr/local/bin/comfy-node-install
 
 # install custom nodes using comfy-cli
-RUN comfy-node-install comfyui-kjnodes comfyui-videohelpersuite ComfyUI-WanVideoWrapper media-url-loader ComfyUI-MelBandRoFormer RES4LYF ComfyUI-SCAIL-Pose
+# Use --build-arg CUSTOM_NODES_CACHE_BUST=$(date +%s) to force re-download
+ARG CUSTOM_NODES_CACHE_BUST=1
+RUN echo "Custom nodes cache bust: ${CUSTOM_NODES_CACHE_BUST}" && \
+    comfy-node-install comfyui-kjnodes comfyui-videohelpersuite ComfyUI-WanVideoWrapper media-url-loader ComfyUI-MelBandRoFormer RES4LYF ComfyUI-SCAIL-Pose ComfyUI-WanAnimatePreprocess
 
 # Prevent pip from asking for confirmation during uninstall steps in custom nodes
 ENV PIP_NO_INPUT=1
